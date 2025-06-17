@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>User Data Manager</title>
+  <style>
+    /* Reset default styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Global styles */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Main container */
+.box {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(4px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(31, 38, 135, 0.2);
+}
+
+/* Typography */
+h2 {
+  color: #1a1a1a;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  background: linear-gradient(to right, #4b6cb7, #182848);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Input fields */
+input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #fafafa;
+  transition: all 0.3s ease;
+}
+
+input:focus {
+  outline: none;
+  border-color: #4b6cb7;
+  box-shadow: 0 0 0 3px rgba(75, 108, 183, 0.1);
+  background: #fff;
+}
+
+input::placeholder {
+  color: #999;
+  opacity: 0.7;
+}
+
+/* Extra inputs container */
+#extraInputs {
+  margin-top: 1rem;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Button styles */
+.btn {
+  width: 100%;
+  padding: 0.9rem;
+  margin: 1rem 0;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(45deg, #ff00f7, #4b6cb7);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  background: linear-gradient(45deg, #e600e6, #3a559f);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Button ripple effect */
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.btn:active::before {
+  width: 200px;
+  height: 200px;
+}
+
+/* Output area */
+.result {
+  background: #f8fafc;
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #4b6cb7;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow-y: auto;
+  transition: all 0.3s ease;
+}
+
+/* Scrollbar styling */
+.result::-webkit-scrollbar {
+  width: 8px;
+}
+
+.result::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.result::-webkit-scrollbar-thumb {
+  background: #4b6cb7;
+  border-radius: 4px;
+}
+
+.result::-webkit-scrollbar-thumb:hover {
+  background: #3a559f;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .box {
+    padding: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  input, .btn {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Accessibility enhancements */
+:focus {
+  outline: 3px solid #4b6cb7;
+  outline-offset: 2px;
+}
+
+/* Animation for output */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.result:not(:empty) {
+  animation: fadeIn 0.3s ease;
+}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>User Data Manager</h2>
+    <input type="text" id="command" placeholder="Enter name or command (show / delete / update / open_<name>)">
+    <div id="extraInputs" style="display:none;">
+      <input type="text" id="age" placeholder="Enter age">
+      <input type="text" id="city" placeholder="Enter city">
+      <input type="text" id="email" placeholder="Enter email">
+    </div>
+    <button class="btn" onclick="processCommand()">Submit</button>
+    <div class="result" id="output"></div>
+  </div>
+
+  <script>
+    let userData = JSON.parse(localStorage.getItem("userData")) || {};
+
+    function saveData() {
+      localStorage.setItem("userData", JSON.stringify(userData));
+    }
+
+    function processCommand() {
+      const command = document.getElementById("command").value.trim();
+      const output = document.getElementById("output");
+      const extra = document.getElementById("extraInputs");
+      output.innerText = "";
+      extra.style.display = "none";
+
+      if (!command) {
+        output.innerText = "⚠️ Please enter a valid name or command.";
+        return;
+      }
+
+      if (command.toLowerCase() === "show") {
+        const names = Object.keys(userData);
+        if (names.length === 0) {
+          output.innerText = "No users found.";
+        } else {
+          output.innerText = "--- List of Users ---\n" + names.map((n, i) => `${i + 1}. ${n}`).join("\n");
+        }
+
+      } else if (command.toLowerCase() === "delete") {
+        const name = prompt("Enter the name you want to delete:");
+        if (userData[name]) {
+          delete userData[name];
+          saveData();
+          output.innerText = `'${name}' has been deleted.`;
+        } else {
+          output.innerText = `No such name '${name}' found.`;
+        }
+
+      } else if (command.toLowerCase() === "update") {
+        const name = prompt("Enter the name you want to update:");
+        if (userData[name]) {
+          const age = prompt(`Age [${userData[name].age}]:`) || userData[name].age;
+          const city = prompt(`City [${userData[name].city}]:`) || userData[name].city;
+          const email = prompt(`Email [${userData[name].email}]:`) || userData[name].email;
+          userData[name] = { age, city, email };
+          saveData();
+          output.innerText = `${name}'s details updated.`;
+        } else {
+          output.innerText = `No such user '${name}' found.`;
+        }
+
+      } else if (command.toLowerCase().startsWith("open_")) {
+        const name = command.substring(5);
+        if (userData[name]) {
+          const info = userData[name];
+          output.innerText =
+            `--- ${name}'s Profile ---\nAge: ${info.age}\nCity: ${info.city}\nEmail: ${info.email}`;
+        } else {
+          output.innerText = `No such user '${name}' found.`;
+        }
+
+      } else if (userData[command]) {
+        output.innerText = "⚠️ Name already taken. Please try a different one.";
+      } else {
+        // New User Input
+        extra.style.display = "block";
+        const age = document.getElementById("age").value.trim();
+        const city = document.getElementById("city").value.trim();
+        const email = document.getElementById("email").value.trim();
+
+        if (!age || !city || !email) {
+          output.innerText = "ℹ️ Please fill age, city, and email fields.";
+          return;
+        }
+
+        userData[command] = { age, city, email };
+        saveData();
+        output.innerText = `Hello ${command}, your details have been saved.`;
+
+        // Clear fields
+        document.getElementById("age").value = "";
+        document.getElementById("city").value = "";
+        document.getElementById("email").value = "";
+      }
+
+      document.getElementById("command").value = "";
+    }
+  </script>
+</body>
+</html>
